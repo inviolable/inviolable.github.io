@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebRTC 화상 통화</title>
+</head>
+<body>
+  <video id="localVideo" style="border:solid 2px blue;"></video>
+  <video id="remoteVideo" style="border:solid 2px red;"></video>
+  <button id="startButton">통화 시작</button>
+  <script src="https://webrtc.org/dist/webrtc.js"></script>
+  <script>
+    const localVideo = document.getElementById("localVideo");
+    const remoteVideo = document.getElementById("remoteVideo");
+    const startButton = document.getElementById("startButton");
+
+    let peerConnection;
+
+    startButton.addEventListener("click", async () => {
+      // 사용자 미디어 접근
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+	
+
+ 
+     console.log("허용됨");
+      // 로컬 비디오 출력
+      localVideo.srcObject = stream;
+      //  localVideo.play();
+
+  try{
+      // PeerConnection 생성
+     const peerConnection = new RTCPeerConnection({
+          iceServers: [
+            
+                          { urls: 'stun:stun.l.google.com:19302',  },
+ 	{ urls: 'stun:stun1.l.google.com:19302',  },
+	{ urls: 'stun:stun2.l.google.com:19302',  },
+	{ urls: 'stun:stun3.l.google.com:19302',  },
+	{ urls: 'stun:stun4.l.google.com:19302',  },
+            
+          ],
+});
+  if (peerConnection) {
+    console.log("RTCPeerConnection 객체가 생성되었습니다.");
+} else {
+    console.error("RTCPeerConnection 객체를 생성하는 도중 오류가 발생했습니다.");
+}
+
+      // ICE 서버 설정
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+          // 서버에 후보 정보 전송
+        }
+      };
+
+      // SDP 세션 생성 
+
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+      const videoTrack = stream.getVideoTracks()[0];
+peerConnection.addTrack(videoTrack, stream);
+      // 서버에 SDP 정보 전송
+  
+
+
+       
+     peerConnection.addEventListener("track", (event) => {
+            remoteVideo.srcObject = event.stream;
+        localVideo.srcObject = event.stream;
+         console.log("webrtc 수신");
+     });
+      
+
+      // 연결 종료 처리
+      peerConnection.oniceconnectionstatechange = () => {
+        if (peerConnection.iceConnectionState === "disconnected") {
+         console.log("webrtc 종료");
+        }
+      };  
+  }catch(error){
+   console.log("피어 생성 불가", error);
+}
+ /*
+     const dataChannel = peerConnection.createDataChannel("myChannel");
+
+dataChannel.onopen = () => {
+  // 데이터 채널 연결 성공
+  setInterval(() => {
+    // 변경 사항을 객체로 생성
+    const data = {
+      x: user.x,
+      y: user.y,
+      direction: user.direction,
+    };
+
+    dataChannel.send(JSON.stringify(data));
+  }, 1000); // 1초마다 전송
+};
+    */
+    });
+  </script>
+</body>
+</html>
